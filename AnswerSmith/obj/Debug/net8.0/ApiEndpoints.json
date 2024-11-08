@@ -1,0 +1,86 @@
+[
+  {
+    "ContainingType": "AnswerSmith.Controllers.Controller_ClassRoomAPI",
+    "Method": "AddClassroom",
+    "RelativePath": "api/classroom/add",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto_Class",
+        "Type": "AnswerSmith.DTOs.DTO_Class",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AnswerSmith.Controllers.Controller_ClassRoomAPI",
+    "Method": "EditClassroom",
+    "RelativePath": "api/classroom/edit",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto_Class",
+        "Type": "AnswerSmith.DTOs.DTO_Class",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AnswerSmith.Controllers.Controller_ClassRoomAPI",
+    "Method": "GetClasses",
+    "RelativePath": "api/classroom/view",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "pageNo",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "rowsPerPage",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "filter",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "orderBy",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "orderMode",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AnswerSmith.Controllers.Controller_ClassRoomAPI",
+    "Method": "GetClass",
+    "RelativePath": "api/classroom/view/{code}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "code",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  }
+]
