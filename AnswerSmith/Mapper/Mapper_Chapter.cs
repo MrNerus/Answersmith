@@ -23,21 +23,18 @@ namespace AnswerSmith.Mapper
         /// <exception cref="InvalidCastException">Thrown if unexpected data was found while mapping.</exception>
         /// <exception cref="Exception">No idea.</exception>
         public async static Task<DTO_Chapter> ToDTO(this Model_Chapter modelChapter) {
-
             try {
                 using SqlConnection connection = new(Data_ConnectionString.GetConnectionString());
 
                 string code = string.Empty;
                 string subjectCode = string.Empty;
-                string classCode = string.Empty;
                 string name = string.Empty;
                 string isActive = string.Empty;
 
                 connection.Open();
-                string query = @"SELECT chp.Code Code, cls.Code Class_Code, sbj.Code Subject_Code, chp.Name Name, chp.IsActive IsActive 
+                string query = @"SELECT chp.Code Code, sbj.Code Subject_Code, chp.Name Name, chp.IsActive IsActive 
                     FROM tbl_chapter chp 
                     JOIN tbl_subject sbj ON chp.Subject_Id = sbj.Id 
-                    JOIN tbl_class cls ON chp.Class_Id = cls.Id;
                     WHERE chp.Code = @code";
 
                 SqlCommand command = new(query, connection);
@@ -49,7 +46,6 @@ namespace AnswerSmith.Mapper
                 while (sqlData.Read()) {
                     code = sqlData["Code"].ToString() ?? throw new InvalidCastException($"Subject Code: {modelChapter.Code} has no code.");
                     subjectCode = sqlData["Subject_Code"].ToString() ?? throw new InvalidCastException($"Subject Code: {modelChapter.Code} has no subject code.");
-                    classCode = sqlData["Class_Code"].ToString() ?? throw new InvalidCastException($"Subject Code: {modelChapter.Code} has no class code.");
                     name = sqlData["Name"].ToString() ?? throw new InvalidCastException($"Subject Code: {modelChapter.Code} has no name.");
                     isActive = sqlData["IsActive"].ToString() ?? throw new InvalidCastException($"Subject Code: {modelChapter.Code} has no active / inactive status.");
                 }
@@ -59,7 +55,6 @@ namespace AnswerSmith.Mapper
                 return new DTO_Chapter {
                     Code = code,
                     Subject_Code = subjectCode,
-                    Class_Code = classCode,
                     Name = name,
                     IsActive = int.Parse(isActive) > 0
                 };
@@ -93,7 +88,7 @@ namespace AnswerSmith.Mapper
                 string query = @"SELECT chp.Code Code, cls.Code Class_Code, cls.Name Class_Name, sbj.Code Subject_Code, sbj.Name Subject_Name, chp.Name Name, chp.IsActive IsActive 
                     FROM tbl_chapter chp 
                     JOIN tbl_subject sbj ON chp.Subject_Id = sbj.Id 
-                    JOIN tbl_class cls ON chp.Class_Id = cls.Id;
+                    JOIN tbl_class cls ON sbj.Class_Id = cls.Id;
                     WHERE chp.Code = @code";
                 
                 
@@ -180,6 +175,42 @@ namespace AnswerSmith.Mapper
             return await NewModel(dtoChapter_Detail.Code);
         }
 
+        public static async Task<Model_Chapter> NewModel(this DTO_Chapter dto_Chapter) {
+            try {
+                using SqlConnection connection = new(Data_ConnectionString.GetConnectionString());
+
+                string subjectId = string.Empty;
+
+                connection.Open();
+                string query = "SELECT Top 1 ts.Id Subject_Id FROM tbl_Subject ts LEFT JOIN tbl_Class tc ON ts.Class_Id = tc.Id WHERE ts.Code = @code AND ts.IsActive = 1 AND tc.IsActive = 1;";
+
+                SqlCommand command = new(query, connection);
+
+                command.Parameters.Add(new SqlParameter("@code", SqlDbType.NVarChar) {Value = dto_Chapter.Subject_Code});
+
+                SqlDataReader sqlData = await command.ExecuteReaderAsync();
+
+                if (!sqlData.HasRows) { throw new InvalidDataException($"{dto_Chapter.Subject_Code} is not assigned to any active subject."); }
+                while (sqlData.Read()) {
+                    subjectId = sqlData["Subject_Id"].ToString() ?? throw new InvalidCastException($"{dto_Chapter.Subject_Code} is not assigned to any active subject.");
+                }
+
+                sqlData.Close();
+
+                return new Model_Chapter {
+                    Id = 0,
+                    Code = dto_Chapter.Code,
+                    Subject_Id = int.Parse(subjectId),
+                    Name = dto_Chapter.Name,
+                    IsActive = dto_Chapter.IsActive
+                };
+            }
+            catch (SqlException) { throw; }
+            catch (InvalidCastException) { throw; }
+            catch (Exception) { throw; }
+        }
+
+
         /// <summary>
         /// Converts a <see cref="string"/> to a <see cref="Model_Chapter"/> model.
         /// </summary>
@@ -232,6 +263,14 @@ namespace AnswerSmith.Mapper
             catch (SqlException) { throw; }
             catch (InvalidCastException) { throw; }
             catch (Exception) { throw; }
+        }
+
+
+        public static async Task<Model_Chapter> UpdateModel(this DTO_Chapter dto_Chapter) {
+            Model_Chapter modelChapter = await dto_Chapter.ToModel();
+            modelChapter.Name = dto_Chapter.Name;
+            modelChapter.IsActive = dto_Chapter.IsActive;
+            return modelChapter;
         }
     }
 }
