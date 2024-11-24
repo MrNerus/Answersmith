@@ -33,6 +33,16 @@
   },
   {
     "ContainingType": "AnswerSmith.Controllers.Controller_ClassRoomAPI",
+    "Method": "GetKeyValue",
+    "RelativePath": "api/classroom/KeyValue",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AnswerSmith.Controllers.Controller_ClassRoomAPI",
     "Method": "GetClasses",
     "RelativePath": "api/classroom/view",
     "HttpMethod": "GET",
@@ -40,17 +50,27 @@
     "Order": 0,
     "Parameters": [
       {
-        "Name": "pageNo",
-        "Type": "System.Int32",
+        "Name": "searchKeyword",
+        "Type": "System.String",
         "IsRequired": false
       },
       {
-        "Name": "rowsPerPage",
-        "Type": "System.Int32",
+        "Name": "searchColumn",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
         "IsRequired": false
       },
       {
-        "Name": "filter",
+        "Name": "filterKeyword",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "filterColumn",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "where_Clause",
         "Type": "System.String",
         "IsRequired": false
       },
@@ -63,6 +83,21 @@
         "Name": "orderMode",
         "Type": "System.Int32",
         "IsRequired": false
+      },
+      {
+        "Name": "orderBy_Clause",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageNo",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "rowsPerPage",
+        "Type": "System.Int32",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": []
@@ -71,6 +106,86 @@
     "ContainingType": "AnswerSmith.Controllers.Controller_ClassRoomAPI",
     "Method": "GetClass",
     "RelativePath": "api/classroom/view/{code}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "code",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AnswerSmith.Controllers.Controller_SubjectAPI",
+    "Method": "AddSubject",
+    "RelativePath": "api/subject/add",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto_Subject",
+        "Type": "AnswerSmith.DTOs.DTO_Subject",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AnswerSmith.Controllers.Controller_SubjectAPI",
+    "Method": "EditSubject",
+    "RelativePath": "api/subject/edit",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto_Subject",
+        "Type": "AnswerSmith.DTOs.DTO_Subject",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AnswerSmith.Controllers.Controller_SubjectAPI",
+    "Method": "GetKeyValue",
+    "RelativePath": "api/subject/KeyValue/{parentCode}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "parentCode",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AnswerSmith.Controllers.Controller_SubjectAPI",
+    "Method": "GetSubjects",
+    "RelativePath": "api/subject/view",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "clientRequest",
+        "Type": "AnswerSmith.Model.Model_PaginatedClientRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AnswerSmith.Controllers.Controller_SubjectAPI",
+    "Method": "GetSubject",
+    "RelativePath": "api/subject/view/{code}",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,

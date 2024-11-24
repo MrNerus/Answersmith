@@ -9,15 +9,17 @@ namespace AnswerSmith.Model
     {
         public int Page_Number { get; set; }
         public int Max_Page { get; set; }
-        public int Data_Count { get; set; }
-        public int Total_Count { get; set; }
+        public int Rows_Count { get; set; }
+        public int Rows_Per_Page { get; set; }
+        public int Total_Rows { get; set; }
 
         public static Model_Pagination_CurrentPage Empty() {
             return new Model_Pagination_CurrentPage {
-                Page_Number = 0,
-                Max_Page = 0,
-                Data_Count = 0,
-                Total_Count = 0
+                Page_Number = 1,
+                Max_Page = 1,
+                Rows_Count = 0,
+                Rows_Per_Page = 20,
+                Total_Rows = 0
             };
         }
     }

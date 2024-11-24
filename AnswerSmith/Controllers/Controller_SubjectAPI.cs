@@ -4,7 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using AnswerSmith.Data;
 using AnswerSmith.DTOs;
+using AnswerSmith.Enums;
 using AnswerSmith.Interfaces;
+using AnswerSmith.Model;
 using AnswerSmith.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,18 +16,18 @@ namespace AnswerSmith.Controllers
     [Route("api/subject")]
     public class Controller_SubjectAPI : ControllerBase
     {
-        private readonly IClassHandler _classHandeler;
-        private readonly IClassService _classService;
+        private readonly ISubjectService _subjectService;
+        private readonly ISubjectHandler _subjectHandler;
         public Controller_SubjectAPI()
         {
-            _classHandeler = new Data_Class();
-            _classService = new Service_ClassRoom(_classHandeler);
+            _subjectHandler = new Data_Subject();
+            _subjectService = new Service_Subject(_subjectHandler);
         }
 
         [HttpPost("add")]
-        public async Task<IActionResult> AddSubject([FromBody] DTO_Class dto_Class) {
+        public async Task<IActionResult> AddSubject([FromBody] DTO_Subject dto_Subject) {
             try {
-                bool status = await _classService.AddClass(dto_Class);
+                bool status = await _subjectService.AddSubject(dto_Subject);
                 if (status) { return Ok(); }
                 else { return BadRequest("Provided Data cannot be added."); }
             } catch (Exception e) {
@@ -35,9 +37,9 @@ namespace AnswerSmith.Controllers
 
 
         [HttpPost("edit")]
-        public async Task<IActionResult> EditSubject([FromBody] DTO_Class dto_Class) {
+        public async Task<IActionResult> EditSubject([FromBody] DTO_Subject dto_Subject) {
             try {
-                bool status = await _classService.EditClass(dto_Class);
+                bool status = await _subjectService.EditSubject(dto_Subject);
                 if (status) { return Ok(); }
                 else { return BadRequest("Provided Data cannot be saved."); }
             } catch (Exception e) {
@@ -49,21 +51,62 @@ namespace AnswerSmith.Controllers
         [HttpGet("view/{code}")]
         public async Task<IActionResult> GetSubject([FromRoute] string code) {
             try {
-                DTO_Class dto_Class = await _classService.GetClass(code);
-                return Ok(dto_Class);
+                DTO_Subject_Detail dto_SubjectDetail = await _subjectService.GetSubject(code);
+                return Ok(dto_SubjectDetail);
             } catch (Exception e) {
                 return BadRequest(e.Message);
             }
         }
 
 
-        [HttpGet("view")]
-        public async Task<IActionResult> GetSubjects(int pageNo = 1, int rowsPerPage = 20, int filterBy = 1, string filterKeyword = "%", string searchKeyword = "%", int orderBy = 3, int orderMode = 1) {
+        // [HttpGet("view")]
+        // public async Task<IActionResult> GetSubjects(string searchKeyword = "%",
+        //     int? searchColumn = null,
+        //     string filterKeyword = "%",
+        //     string? filterColumn = null,
+        //     string? where_Clause = null,
+        //     int orderBy = (int) Enum_Class_OrderBy.Name, 
+        //     int orderMode = (int) Enum_Any_OrderMode.ASC,
+        //     string? orderBy_Clause = null,
+
+        //     int pageNo = 1,
+        //     int rowsPerPage = 20) {
+        //     try {
+        //         Tuple<List<DTO_Class>, Model.Model_Pagination_CurrentPage> Classes = await _classService.GetClasses(
+        //             searchKeyword: searchKeyword,
+        //             searchColumn: searchColumn,
+        //             filterKeyword: filterKeyword,
+        //             filterColumn: filterColumn,
+        //             where_Clause: where_Clause,
+        //             orderBy: orderBy, 
+        //             orderMode: orderMode,
+        //             orderBy_Clause: orderBy_Clause,
+
+        //             pageNo: pageNo,
+        //             rowsPerPage: rowsPerPage);
+        //         return Ok(Classes);
+        //     } catch (Exception e) {
+        //         return BadRequest($"{{\"content\": \"{e.Message}\"}}");
+        //     }
+        // }
+
+        [HttpPost("view")]
+        public async Task<IActionResult> GetSubjects([FromBody] Model_PaginatedClientRequest clientRequest) {
             try {
-                Tuple<List<DTO_Class>, Model.Model_Pagination_CurrentPage> Classes = await _classService.GetClasses(pageNo, rowsPerPage, filter, orderBy, orderMode);
-                return Ok(Classes);
+                Tuple<List<DTO_Subject_Detail>, Model.Model_Pagination_CurrentPage> subjects = await _subjectService.GetSubjects(clientRequest); 
+                return Ok(subjects);
             } catch (Exception e) {
-                return BadRequest(e.Message);
+                return BadRequest($"{{\"content\": \"{e.Message}\"}}");
+            }
+        }
+        
+        [HttpGet("KeyValue/{parentCode}")]
+        public async Task<IActionResult> GetKeyValue([FromRoute] string parentCode) {
+            try {
+                List<Model_KeyValue> pairs = await _subjectService.GetKeyValuePair(parentCode); 
+                return Ok(pairs);
+            } catch (Exception e) {
+                return BadRequest($"{{\"content\": \"{e}\"}}");
             }
         }
 

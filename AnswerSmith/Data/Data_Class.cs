@@ -9,6 +9,7 @@ using AnswerSmith.Interfaces;
 using AnswerSmith.Mapper;
 using AnswerSmith.Model;
 using Microsoft.Data.SqlClient;
+using Microsoft.IdentityModel.Tokens;
 
 namespace AnswerSmith.Data
 {
@@ -46,10 +47,12 @@ namespace AnswerSmith.Data
                 connection.Open();
 
                 using SqlTransaction transaction = connection.BeginTransaction();
+
+
                 try {
                     string query = $"UPDATE tbl_Class SET [IsActive] = @isActive, [Name] = @name WHERE [Id] = @id;";
 
-                    SqlCommand command = new(query, connection);
+                    SqlCommand command = new(query, connection, transaction);
 
                     command.Parameters.Add(new SqlParameter("@id", SqlDbType.NVarChar){Value = model_Class.Id});
                     command.Parameters.Add(new SqlParameter("@name", SqlDbType.NVarChar){Value = dto_Class.Name});
@@ -79,27 +82,37 @@ namespace AnswerSmith.Data
             catch (Exception) { throw; }
         }
 
-        public async Task<Tuple<List<DTO_Class>,Model_Pagination_CurrentPage>> GetClasses(
-            int pageNo = 1,
-            int rowsPerPage = 20,
-            string filter = "%", 
-            Enum_Class_OrderBy orderBy = Enum_Class_OrderBy.Name, 
-            Enum_Any_OrderMode orderMode = Enum_Any_OrderMode.ASC
-        ) {
-            try {
+        public async Task<Tuple<List<DTO_Class>,Model_Pagination_CurrentPage>> GetClasses(Model_PaginatedClientRequest paginationRequest) {
+             try {
+
                 using SqlConnection connection = new(Data_ConnectionString.GetConnectionString());
+
                 connection.Open();
+                Tuple<string, List<SqlParameter>>? whereClause = (paginationRequest.SearchFilter ?? []).ToSqlCondition("AND");
+                string? orderClause = paginationRequest.Order.ToStr();
 
-                using SqlTransaction transaction = connection.BeginTransaction();
-                string query = $"CSP_GetPaginatedClasses";
+                string query = @$"-- Get Paginated Classes
+                    EXEC CSP_GetPaginatedClasses 
+                        @AnySearch = @AnySearch,
+                        @searchFilter = @searchFilterParam,
+                        @order = @orderParam,
+                        @pageNo = @pageNo,
+                        @rowsPerPage = @rowsPerPage
+--";
 
-                SqlCommand command = new(query, connection, transaction){ CommandType = CommandType.StoredProcedure };
+                using SqlCommand command = new(query, connection) { CommandType = CommandType.Text };
+                command.Parameters.Add(new SqlParameter("@AnySearch", SqlDbType.NVarChar) { Value = paginationRequest.Search.IsNullOrEmpty() ? DBNull.Value : paginationRequest.Search });
+                command.Parameters.Add(new SqlParameter("@searchFilterParam", SqlDbType.NVarChar) { Value = (whereClause is not null) ? whereClause.Item1 : DBNull.Value });
 
-                command.Parameters.Add(new SqlParameter("@Page_Number", SqlDbType.Int) {Value = pageNo});
-                command.Parameters.Add(new SqlParameter("@Number_Of_Rows_Per_Page", SqlDbType.Int) {Value = rowsPerPage});
-                command.Parameters.Add(new SqlParameter("@filter", SqlDbType.NVarChar) {Value = filter});
-                command.Parameters.Add(new SqlParameter("@Order_By", SqlDbType.Int) {Value = (int) orderBy});
-                command.Parameters.Add(new SqlParameter("@Order_Mode", SqlDbType.Int) {Value = (int) orderMode});
+
+                if (orderClause is not null) {
+                    command.Parameters.Add(new SqlParameter("@orderParam", SqlDbType.NVarChar) { Value = orderClause });
+                } else {
+                    command.Parameters.Add(new SqlParameter("@orderParam", SqlDbType.NVarChar) { Value = DBNull.Value });
+                }
+                
+                command.Parameters.Add(new SqlParameter("@pageNo", SqlDbType.Int) { Value = paginationRequest.Pagination.Page_Number });
+                command.Parameters.Add(new SqlParameter("@rowsPerPage", SqlDbType.Int) { Value = paginationRequest.Pagination.Rows_Per_Page });
 
                 using SqlDataReader reader = await command.ExecuteReaderAsync();
 
@@ -107,12 +120,13 @@ namespace AnswerSmith.Data
 
                 if (reader.HasRows) {
                     while (await reader.ReadAsync()) {
-                        DTO_Class dTO_Class = new() {
+                        DTO_Class dto_SubjectDetail = new() {
+                            SN = int.Parse(reader["CCol_RowNum"].ToString() ?? "-1"),
                             Code = reader["Code"].ToString() ?? "No Data",
                             Name = reader["Name"].ToString() ?? "No Data",
                             IsActive = (reader["IsActive"].ToString() ?? "0") == "1"
                         };   
-                        classList.Add(dTO_Class);
+                        classList.Add(dto_SubjectDetail);
                     }
                 }
 
@@ -123,13 +137,45 @@ namespace AnswerSmith.Data
                         paginationInfo = new() {
                             Page_Number = int.Parse(reader["Page_Number"].ToString() ?? "1"),
                             Max_Page = int.Parse(reader["Max_Page"].ToString() ?? "0"),
-                            Data_Count = int.Parse(reader["Data_Count"].ToString() ?? "0"),
-                            Total_Count = int.Parse(reader["Total_Count"].ToString() ?? "0")
+                            Rows_Count = int.Parse(reader["Rows_Count"].ToString() ?? "0"),
+                            Rows_Per_Page = int.Parse(reader["Rows_Per_Page"].ToString() ?? "0"),
+                            Total_Rows = int.Parse(reader["Total_Rows"].ToString() ?? "0")
                         };
                     }
                 }
 
                 return Tuple.Create(classList, paginationInfo);
+            }
+            catch (Exception) { throw; }
+        }
+
+
+        public async Task<List<Model_KeyValue>> GetKeyValuePair() {
+            try {
+
+                string?[] orderByTable = [null, "Id", "Code", "Class_Code", "Class_Name", "Name"];
+                using SqlConnection connection = new(Data_ConnectionString.GetConnectionString());
+                connection.Open();
+
+                string query = @"SELECT [Code], [Name] FROM tbl_Class WHERE IsActive = 1";
+
+                using SqlCommand command = new(query, connection) { CommandType = CommandType.Text };
+
+                using SqlDataReader reader = await command.ExecuteReaderAsync();
+
+                List<Model_KeyValue> pairs = [];
+
+                if (reader.HasRows) {
+                    while (await reader.ReadAsync()) {
+                        Model_KeyValue model_KeyValue = new() {
+                            Key = reader["Code"].ToString() ?? "No Data",
+                            Value = reader["Name"].ToString() ?? "No Data",
+                        };   
+                        pairs.Add(model_KeyValue);
+                    }
+                }
+
+                return pairs;
             }
             catch (Exception) { throw; }
         }

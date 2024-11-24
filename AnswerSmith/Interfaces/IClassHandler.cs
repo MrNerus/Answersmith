@@ -13,12 +13,9 @@ namespace AnswerSmith.Interfaces
         public Task<bool> AddClass(DTO_Class dto_Class);
         public Task<bool> EditClass(DTO_Class dto_Class);
         public Task<DTO_Class> GetClass(string classCode);
-        public Task<Tuple<List<DTO_Class>,Model_Pagination_CurrentPage>> GetClasses(
-            int pageNo = 1,
-            int rowsPerPage = 20,
-            string filter = "%", 
-            Enum_Class_OrderBy orderBy = Enum_Class_OrderBy.Name, 
-            Enum_Any_OrderMode orderMode = Enum_Any_OrderMode.ASC
-        );
+        public Task<Tuple<List<DTO_Class>,Model_Pagination_CurrentPage>> GetClasses(Model_PaginatedClientRequest paginationRequest);
+
+        public Task<List<Model_KeyValue>> GetKeyValuePair();
+
     }
 }

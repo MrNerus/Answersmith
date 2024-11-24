@@ -37,7 +37,7 @@ namespace AnswerSmith.Mapper
 
                 SqlCommand command = new(query, connection);
 
-                command.Parameters.Add(new SqlParameter("@id", SqlDbType.NVarChar).Value = modelSubject.Id);
+                command.Parameters.Add(new SqlParameter("@id", SqlDbType.NVarChar) {Value = modelSubject.Id});
 
                 SqlDataReader sqlData = await command.ExecuteReaderAsync();
 
@@ -81,11 +81,11 @@ namespace AnswerSmith.Mapper
                 string isActive = String.Empty;
 
                 connection.Open();
-                string query = "SELECT TOP 1 s.Code Code, c.Code Class_Code, c.Name Class_Name, s.Name Name, s.IsActive IsActive FROM tbl_subject s LEFT JOIN tbl_class c ON s.Class_Id = c.Id WHERE s.Class_Id = @id;";
+                string query = "SELECT TOP 1 s.Code Code, c.Code Class_Code, c.Name Class_Name, s.Name Name, s.IsActive IsActive FROM tbl_subject s LEFT JOIN tbl_class c ON s.Class_Id = c.Id WHERE s.Id = @id;";
 
                 SqlCommand command = new(query, connection);
 
-                command.Parameters.Add(new SqlParameter("@id", SqlDbType.NVarChar).Value = modelSubject.Id);
+                command.Parameters.Add(new SqlParameter("@id", SqlDbType.NVarChar) {Value = modelSubject.Id});
 
                 SqlDataReader sqlData = await command.ExecuteReaderAsync();
 
@@ -135,7 +135,7 @@ namespace AnswerSmith.Mapper
         /// <exception cref="InvalidCastException">Thrown if unexpected data was found while mapping.</exception>
         /// <exception cref="Exception">No idea.</exception>
         public async static Task<Model_Subject> ToModel(this DTO_Subject dtoSubject) {
-            return await NewModel(dtoSubject.Code);
+            return await ExistingData(dtoSubject.Code);
         }
 
         /// <summary>
@@ -147,7 +147,7 @@ namespace AnswerSmith.Mapper
         /// <exception cref="InvalidCastException">Thrown if unexpected data was found while mapping.</exception>
         /// <exception cref="Exception">No idea.</exception>
         public async static Task<Model_Subject> ToModel(this DTO_Subject_Summary dtoSubject_Summary) {
-            return await NewModel(dtoSubject_Summary.Code);
+            return await ExistingData(dtoSubject_Summary.Code);
         }
 
         /// <summary>
@@ -159,7 +159,7 @@ namespace AnswerSmith.Mapper
         /// <exception cref="InvalidCastException">Thrown if unexpected data was found while mapping.</exception>
         /// <exception cref="Exception">No idea.</exception>
         public async static Task<Model_Subject> ToModel(this DTO_Subject_Detail dtoSubject_Detail) {
-            return await NewModel(dtoSubject_Detail.Code);
+            return await ExistingData(dtoSubject_Detail.Code);
         }
 
         /// <summary>
@@ -171,10 +171,10 @@ namespace AnswerSmith.Mapper
         /// <exception cref="InvalidCastException">Thrown if unexpected data was found while mapping.</exception>
         /// <exception cref="Exception">No idea.</exception>
         public async static Task<Model_Subject> ToModel(string subjectCode) {
-            return await NewModel(subjectCode);
+            return await ExistingData(subjectCode);
         }
 
-        private static async Task<Model_Subject> NewModel(string subjectCode) {
+        private static async Task<Model_Subject> ExistingData(string subjectCode) {
             try {
                 using SqlConnection connection = new(Data_ConnectionString.GetConnectionString());
 
@@ -187,9 +187,9 @@ namespace AnswerSmith.Mapper
                 connection.Open();
                 string query = "SELECT Top 1 Id, Code, Class_Id, Name, IsActive FROM tbl_subject WHERE Code = @code;";
 
-                SqlCommand command = new SqlCommand(query, connection);
+                SqlCommand command = new(query, connection);
 
-                command.Parameters.Add(new SqlParameter("@code", SqlDbType.NVarChar).Value = subjectCode);
+                command.Parameters.Add(new SqlParameter("@code", SqlDbType.NVarChar) {Value = subjectCode});
 
                 SqlDataReader sqlData = await command.ExecuteReaderAsync();
 
@@ -214,6 +214,48 @@ namespace AnswerSmith.Mapper
             catch (SqlException) { throw; }
             catch (InvalidCastException) { throw; }
             catch (Exception) { throw; }
+        }
+
+        public static async Task<Model_Subject> NewModel(this DTO_Subject dto_Subject) {
+            try {
+                using SqlConnection connection = new(Data_ConnectionString.GetConnectionString());
+
+                string classId = string.Empty;
+
+                connection.Open();
+                string query = "SELECT Top 1 Id FROM tbl_class WHERE Code = @code AND IsActive = 1;";
+
+                SqlCommand command = new(query, connection);
+
+                command.Parameters.Add(new SqlParameter("@code", SqlDbType.NVarChar) {Value = dto_Subject.Class_Code});
+
+                SqlDataReader sqlData = await command.ExecuteReaderAsync();
+
+                if (!sqlData.HasRows) { throw new InvalidDataException($"{dto_Subject.Class_Code} is not assigned to any active class."); }
+                while (sqlData.Read()) {
+                    classId = sqlData["Id"].ToString() ?? throw new InvalidCastException($"{dto_Subject.Class_Code} is not assigned to any active class.");
+                }
+
+                sqlData.Close();
+
+                return new Model_Subject {
+                    Id = 0,
+                    Code = dto_Subject.Code,
+                    Class_Id = int.Parse(classId),
+                    Name = dto_Subject.Name,
+                    IsActive = dto_Subject.IsActive
+                };
+            }
+            catch (SqlException) { throw; }
+            catch (InvalidCastException) { throw; }
+            catch (Exception) { throw; }
+        }
+
+        public static async Task<Model_Subject> UpdateModel(this DTO_Subject dto_Subject) {
+            Model_Subject modelSubject = await dto_Subject.ToModel();
+            modelSubject.Name = dto_Subject.Name;
+            modelSubject.IsActive = dto_Subject.IsActive;
+            return modelSubject;
         }
     }
 }

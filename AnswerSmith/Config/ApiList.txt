@@ -1,3 +1,6 @@
 This file is not related to program
 
 /api/classroom/add
+/api/classroom/edit
+/api/classroom/view/{code}
+/api/classroom/view?pageNo={int}&rowsPerPage={int}&

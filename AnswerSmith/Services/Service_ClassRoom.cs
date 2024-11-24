@@ -39,16 +39,37 @@ namespace AnswerSmith.Services {
             catch (Exception) { throw; }
         }
 
-        public async Task<Tuple<List<DTO_Class>,Model_Pagination_CurrentPage>> GetClasses(
-            int pageNo = 1,
-            int rowsPerPage = 20,
-            string filter = "%", 
-            int orderBy = (int) Enum_Class_OrderBy.Name, 
-            int orderMode = (int) Enum_Any_OrderMode.ASC
-        ) {
-            Enum_Class_OrderBy enum_OrderBy = (Enum_Class_OrderBy) orderBy;
-            Enum_Any_OrderMode enum_OrderMode = (Enum_Any_OrderMode) orderMode;
-            try { return await _classHandler.GetClasses(pageNo, rowsPerPage, filter, enum_OrderBy, enum_OrderMode); }
+        public async Task<Tuple<List<DTO_Class>,Model_Pagination_CurrentPage>> GetClasses(Model_PaginatedClientRequest clientRequest) {
+            Dictionary<string,string> KeyMap = new() {
+                {"Code", "Code"},
+                {"Name", "Name"},
+                {"Status", "IsActive"},
+            };
+            Dictionary<string,Dictionary<string,string>> ValueMap = new() {
+                {"Status", new Dictionary<string, string>() {{"active", "1"}, {"inactive", "0"}, {"_", "%"}}}
+            };
+
+            Model_PaginatedClientRequest translatedMeaning = new() {
+                Search = clientRequest.Search,
+                SearchFilter = (clientRequest.SearchFilter ?? []).Select(x => new Model_WhereClause { 
+                    Key = KeyMap.ContainsKey(x.Key) ? KeyMap[x.Key] : x.Key,
+                    Value = ValueMap.ContainsKey(x.Key) ? ValueMap[x.Key].ContainsKey(x.Value) ? ValueMap[x.Key][x.Value] : x.Value : x.Value,
+                    IsFuzzy = x.IsFuzzy
+                }).ToList(),
+                Order = (clientRequest.Order ?? []).Select(x => new Model_OrderBy {
+                    Column_Name = KeyMap.ContainsKey(x.Column_Name) ? KeyMap[x.Column_Name] : x.Column_Name,
+                    Order_Mode = x.Order_Mode,
+                    Miscelleneous = x.Miscelleneous
+                }).ToList(),
+                Pagination = clientRequest.Pagination
+            };
+
+            try { return await _classHandler.GetClasses(translatedMeaning); 
+            } catch (Exception) { throw; }
+        }
+
+        public async Task<List<Model_KeyValue>> GetKeyValuePair() {
+            try { return await _classHandler.GetKeyValuePair(); }
             catch (Exception) { throw; }
         }
     }

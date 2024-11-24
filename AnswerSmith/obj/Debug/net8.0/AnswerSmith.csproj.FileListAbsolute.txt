@@ -68,3 +68,4 @@ D:\AspNetCore\AnswerSmith\AnswerSmith\obj\Debug\net8.0\refint\AnswerSmith.dll
 D:\AspNetCore\AnswerSmith\AnswerSmith\obj\Debug\net8.0\AnswerSmith.pdb
 D:\AspNetCore\AnswerSmith\AnswerSmith\obj\Debug\net8.0\AnswerSmith.genruntimeconfig.cache
 D:\AspNetCore\AnswerSmith\AnswerSmith\obj\Debug\net8.0\ref\AnswerSmith.dll
+D:\AspNetCore\AnswerSmith\AnswerSmith\obj\Debug\net8.0\AnswerSmith.sourcelink.json

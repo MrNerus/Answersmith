@@ -4,8 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using AnswerSmith.Data;
 using AnswerSmith.DTOs;
+using AnswerSmith.Enums;
 using AnswerSmith.Interfaces;
+using AnswerSmith.Model;
 using AnswerSmith.Services;
+using Microsoft.AspNetCore.Cors;
+
 using Microsoft.AspNetCore.Mvc;
 
 namespace AnswerSmith.Controllers
@@ -27,7 +31,7 @@ namespace AnswerSmith.Controllers
             try {
                 bool status = await _classService.AddClass(dto_Class);
                 if (status) { return Ok(); }
-                else { return BadRequest("Provided Data cannot be added."); }
+                else { return BadRequest("{`content`: Provided Data cannot be added."); }
             } catch (Exception e) {
                 return BadRequest(e.Message);
             } 
@@ -39,33 +43,44 @@ namespace AnswerSmith.Controllers
             try {
                 bool status = await _classService.EditClass(dto_Class);
                 if (status) { return Ok(); }
-                else { return BadRequest("Provided Data cannot be saved."); }
+                else { return BadRequest($"{{\"content\": \"Provided Data cannot be saved.\"}}"); }
             } catch (Exception e) {
-                return BadRequest(e.Message);
+                return BadRequest($"{{\"content\": \"{e.Message}\"}}");
             }
         }
 
         
         [HttpGet("view/{code}")]
+        // [EnableCors("AllowSpecificOrigin")]
         public async Task<IActionResult> GetClass([FromRoute] string code) {
             try {
                 DTO_Class dto_Class = await _classService.GetClass(code);
                 return Ok(dto_Class);
             } catch (Exception e) {
-                return BadRequest(e.Message);
+                return BadRequest($"{{\"content\": \"{e.Message}\"}}");
             }
         }
 
-
-        [HttpGet("view")]
-        public async Task<IActionResult> GetClasses(int pageNo = 1, int rowsPerPage = 20, string filter = "%", int orderBy = 3, int orderMode = 1) {
+        [HttpPost("view")]
+        public async Task<IActionResult> GetSubjects([FromBody] Model_PaginatedClientRequest clientRequest) {
             try {
-                Tuple<List<DTO_Class>, Model.Model_Pagination_CurrentPage> Classes = await _classService.GetClasses(pageNo, rowsPerPage, filter, orderBy, orderMode);
-                return Ok(Classes);
+                Tuple<List<DTO_Class>, Model.Model_Pagination_CurrentPage> classes = await _classService.GetClasses(clientRequest); 
+                return Ok(classes);
             } catch (Exception e) {
-                return BadRequest(e.Message);
+                return BadRequest($"{{\"content\": \"{e.Message}\"}}");
             }
         }
+
+        [HttpGet("KeyValue")]
+        public async Task<IActionResult> GetKeyValue() {
+            try {
+                List<Model_KeyValue> pairs = await _classService.GetKeyValuePair(); 
+                return Ok(pairs);
+            } catch (Exception e) {
+                return BadRequest($"{{\"content\": \"{e.Message}\"}}");
+            }
+        }
+
 
 
     }
