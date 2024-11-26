@@ -39,7 +39,7 @@ namespace AnswerSmith.Mapper
 
                 SqlCommand command = new(query, connection);
 
-                command.Parameters.Add(new SqlParameter("@Code", SqlDbType.NVarChar).Value = modelChapter.Code);
+                command.Parameters.Add(new SqlParameter("@Code", SqlDbType.NVarChar) {Value = modelChapter.Code});
 
                 SqlDataReader sqlData = await command.ExecuteReaderAsync();
 
@@ -88,13 +88,13 @@ namespace AnswerSmith.Mapper
                 string query = @"SELECT chp.Code Code, cls.Code Class_Code, cls.Name Class_Name, sbj.Code Subject_Code, sbj.Name Subject_Name, chp.Name Name, chp.IsActive IsActive 
                     FROM tbl_chapter chp 
                     JOIN tbl_subject sbj ON chp.Subject_Id = sbj.Id 
-                    JOIN tbl_class cls ON sbj.Class_Id = cls.Id;
+                    JOIN tbl_class cls ON sbj.Class_Id = cls.Id
                     WHERE chp.Code = @code";
                 
                 
                 SqlCommand command = new(query, connection);
 
-                command.Parameters.Add(new SqlParameter("@code", SqlDbType.NVarChar).Value = modelChapter.Code);
+                command.Parameters.Add(new SqlParameter("@code", SqlDbType.NVarChar) {Value = modelChapter.Code});
 
                 SqlDataReader sqlData = await command.ExecuteReaderAsync();
 
@@ -238,14 +238,14 @@ namespace AnswerSmith.Mapper
 
                 SqlCommand command = new SqlCommand(query, connection);
 
-                command.Parameters.Add(new SqlParameter("@code", SqlDbType.NVarChar).Value = chapterCode);
+                command.Parameters.Add(new SqlParameter("@code", SqlDbType.NVarChar) {Value = chapterCode});
 
                 SqlDataReader sqlData = await command.ExecuteReaderAsync();
 
                 while (sqlData.Read()) {
                     id = sqlData["Id"].ToString() ?? throw new InvalidCastException($"Subject Code: {chapterCode} has no id.");
                     code = sqlData["Code"].ToString() ?? throw new InvalidCastException($"Subject Code: {chapterCode} has no code.");
-                    subjectId = sqlData["Class_Id"].ToString() ?? throw new InvalidCastException($"Subject Code: {chapterCode} has no class id.");
+                    subjectId = sqlData["Subject_Id"].ToString() ?? throw new InvalidCastException($"Subject Code: {chapterCode} has no class id.");
                     name = sqlData["Name"].ToString() ?? throw new InvalidCastException($"Subject Code: {chapterCode} has no name.");
                     isActive = sqlData["IsActive"].ToString() ?? throw new InvalidCastException($"Subject Code: {chapterCode} has no active / inactive status.");
                 }
