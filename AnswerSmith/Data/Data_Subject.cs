@@ -359,7 +359,7 @@ namespace AnswerSmith.Data
                     while (await reader.ReadAsync()) {
                         Model_KeyValue model_KeyValue = new() {
                             Key = reader["ts_Code"].ToString() ?? "No Data",
-                            Value = reader["ts_Value"].ToString() ?? "No Data",
+                            Value = reader["ts_Name"].ToString() ?? "No Data",
                         };   
                         pairs.Add(model_KeyValue);
                     }
